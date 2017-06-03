@@ -12,6 +12,6 @@ public class GameTree {
 		System.out.println("Pick your first move [format should be 'x,y']:");
 		String userMove = sc.next();
 		String[] move = userMove.split(",");
-		game.makeMove(Integer.parseInt(move[0]), Integer.parseInt(move[1]), true);
+		game.makeMove(new Move(move[0], move[1]), true);
 	}
 }

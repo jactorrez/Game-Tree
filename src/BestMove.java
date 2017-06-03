@@ -1,16 +1,18 @@
 
-public class BestMove {
+public class BestMove extends Move{
 	public int score;
-	public int moveXPos;
-	public int moveYPos;
 	
 	public BestMove(int x, int y, int score){
+		super(x, y);
 		this.score = score;
-		this.moveXPos = x;
-		this.moveYPos = y;
 	}
 	
-	public BestMove(){
-		this(-2,-2,-2);
+	public BestMove(int x, int y){
+		this(x, y, -5);
+	}
+	
+	@Override
+	public String toString(){
+		return "[" + x + "," + y + "]" + " Score: " + score;
 	}
 }
