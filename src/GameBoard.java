@@ -9,101 +9,102 @@ public class GameBoard {
 	private String CPUSymbol;
 	private String[][] board;
 	private ArrayList<Move> possibleMoves = new ArrayList<>();
+	private Scanner scanner;
 	
-	public GameBoard(int size, String playerSymbol){
+	public GameBoard(int size, Scanner scanner){
+	  this.scanner = scanner;
 	  this.boardSize = size * size;
-	  this.playerSymbol = playerSymbol;
-	  this.CPUSymbol = playerSymbol == "X" ? "O" : "X";
+	  this.playerSymbol = getUserSymbol();
+	  this.CPUSymbol = playerSymbol.equals("X") ? "O" : "X";
+	  System.out.println("CPUSymbol is: " + CPUSymbol);
 	  this.board = new String[size][size];
 
 	  for(int i = 0, len = board.length; i < len; i++){
 		  for(int z = 0, len2 = board[i].length; z < len2; z++){
 			  board[i][z] = "-";
 			  possibleMoves.add(new Move(i+1, z+1));
-		  }
-	   }
+	    }
+	  } 
 	}
 	
 	public GameBoard(int size){
-		this(size, "X");
+		this(size, new Scanner(System.in));
 	}
 	
-	private void displayMoves(){
-		for(Move move : possibleMoves){
-			System.out.println("[" + move.x + "," + move.y + "]");
-		}
+	private String getUserSymbol(){  
+	  System.out.println("Please pick your symbol (O or X):");
+	  String symbol = scanner.next();
+	  System.out.println("Your symbol is: " + symbol);
+	  return symbol;
 	}
 
 	public void displayBoard(){
 		for(int i = 0, len = board.length; i < len; i++){
-			System.out.println();
-		  for(int z = 0, len2 = board[i].length; z < len2; z++){
-			 System.out.print(" " + board[i][z] + " ");
-		  }
-		 }
+		  System.out.println();
+		    for(int z = 0, len2 = board[i].length; z < len2; z++){
+			  System.out.print(board[i][z] + " ");
+		    }
+		}
 	}
 	
 	public void makeMove(Move move, boolean isPlayerTurn){
 		int x = move.x - 1;
-		Scanner sc = new Scanner(System.in);
-		boolean fullBoard = (boardSize - possibleMoves.size() == boardSize);
-
 		int y = move.y - 1;
+		
+		if(isFull()){
+			System.out.println("\nThe board is full, and there's no winner. It's a tie!");
+			return;
+		}
 		
 		if(isPlayerTurn){
 			if(board[x][y] == "-"){
 				board[x][y] = playerSymbol;
 				removeMove(move);
+				
 				if(hasWinner(move, true)){
+					displayBoard();
 					System.out.println("You won!");
+					scanner.close();
 					return;
 				}
+				
 				displayBoard();	
-				System.out.println();
-				if(fullBoard){
-					System.out.println("The board is full, and there's no winner. It's a tie!");
-				}
 				BestMove CPUMove = chooseMove(false, move);
 				makeMove(CPUMove, false);
 			} else {
 				System.out.println("This move has already been made, please choose another");
-				String[] userNewMove = sc.next().split(",");
-				makeMove(new Move(userNewMove[0], userNewMove[1]), true);
+				Move newMove = askAndValidateMove();
+				makeMove(newMove, true);
 			}
-			
-			
 		} else {
 			board[x][y] = CPUSymbol;
 			removeMove(move);
+			
 			if(hasWinner(move, false)){
-				System.out.println("hasWinner returned: " + (hasWinner(move, false)));
-				System.out.println("You lost.");
+				System.out.println();
+				displayBoard();
+				System.out.println("\nYou lost.");
+				scanner.close();
 				return;
 			}
-			System.out.println("The computer responded:");
+			
+			System.out.println("\nThe computer responded:");
 			displayBoard();
-			
-			if(fullBoard){
-				System.out.println();
-				System.out.println("The board is full, and there's no winner. It's a tie!");
-			} else{
-				Move userMove = askAndValidateMove();
-				makeMove(userMove, true);
-			}
-			
+
+			Move userMove = askAndValidateMove();
+			makeMove(userMove, true);
 			
 		}
 	}
 	
 	public Move askAndValidateMove(){
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Pick your move. [Pattern should be 'y,x']:");
-		String userInput = sc.next();
-		String[] userInputArr = userInput.split(",");
 		Move userMove;
 		
+		System.out.println("\nPick your move. [Pattern should be 'y,x']:");
+		String userInput = scanner.next();
+		String[] userInputArr = userInput.split(",");
 		boolean stringMatches = Pattern.matches("\\d{1},\\d{1}", userInput);
-		
+
 		if(stringMatches){
 			userMove = new Move(userInputArr[0], userInputArr[1]);
 			return userMove;
@@ -144,7 +145,7 @@ public class GameBoard {
 		if(hasWinner(lastMove, !isPlayerTurn)){
 			boolean lastPlayer = !isPlayerTurn;
 			winningSymbol = lastPlayer ? playerSymbol : CPUSymbol;
-			int score = winningSymbol == playerSymbol ? -1 : 1;
+			int score = (winningSymbol == playerSymbol ? -1 : 1);
 			best.score = score;
 			return best;
 		} else if (isFull()){
@@ -160,27 +161,26 @@ public class GameBoard {
 		
 		int index = 0;
 		int size = possibleMoves.size();
-		if(!possibleMoves.isEmpty()){
-			while(index < size){
-				Move m = possibleMoves.get(0);
-				testMove(m, isPlayerTurn);
-				index++;
-				removeMove(m);
-				reply = chooseMove(!isPlayerTurn, m);
-				undoMove(m);
-	
-				if((isPlayerTurn && reply.score < best.score) || (!isPlayerTurn && best.score < reply.score)){
-					best.x = m.x;
-					best.y = m.y;
-					best.score = reply.score;
-				} 
-			}
+		
+		while(index < size){
+			Move m = possibleMoves.get(0);
+			testMove(m, isPlayerTurn);
+			index++;
+			removeMove(m);
+			reply = chooseMove(!isPlayerTurn, m);
+			undoMove(m);
+
+			if((isPlayerTurn && reply.score < best.score) || (!isPlayerTurn && best.score < reply.score)){
+				best.x = m.x;
+				best.y = m.y;
+				best.score = reply.score;
+			} 
 		}
+		
 		return best;
 	}
 	
-	public boolean hasWinner(Move move, boolean checkPlayerWin){
-		
+	private boolean hasWinner(Move move, boolean checkPlayerWin){
 		String symbolToCheck = (checkPlayerWin == true ? playerSymbol : CPUSymbol);
 		int currentX = move.x - 1;
 		int currentY = move.y - 1;
@@ -192,23 +192,22 @@ public class GameBoard {
 		int n = board.length;
 		
 		for(int i = 0; i < board.length; i++){
-			
-			// check row
+			// check for full row
 			if(board[currentX][i] == symbolToCheck){
 				row++;
 			}
 			
-			// check col
+			// check for full column
 			if(board[i][currentY] == symbolToCheck){
 				col++;
 			}
 			
-			// check diagonal 
+			// check for full diagonal 
 			if(board[i][i] == symbolToCheck){
 				diag++;
 			}
 			
-			// check reverse diagonal
+			// check for full reverse diagonal
 			if(board[i][(n - 1)-i] == symbolToCheck){
 				rdiag++;
 			}
@@ -227,7 +226,8 @@ public class GameBoard {
 	}
 	
 	public static void main(String[] args){
-		GameBoard testBoard = new GameBoard(3);
+		Scanner sc = new Scanner(System.in);
+		GameBoard testBoard = new GameBoard(3, sc);
 		Move move = testBoard.askAndValidateMove();
 		testBoard.makeMove(move, true);
 	}
