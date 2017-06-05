@@ -57,7 +57,7 @@ public class GameBoard {
 				}
 				
 				displayBoard();	
-				BestMove CPUMove = chooseMove(false, move);
+				BestMove CPUMove = chooseMove(false, move, -1, 1);
 				makeMove(CPUMove, false);
 			} else {
 				System.out.println("This move has already been made, please choose another");
@@ -99,7 +99,49 @@ public class GameBoard {
 	/*
 	 * Minimax algorithm implementation used by the CPU to discover the best move to make 
 	 */
-	private BestMove chooseMove(boolean isPlayerTurn, Move lastMove){
+//	private BestMove chooseMove(boolean isPlayerTurn, Move lastMove){
+//		BestMove best = new BestMove(1,1);
+//		BestMove reply; 
+//		String winningSymbol;
+//		
+//		if(hasWinner(lastMove, !isPlayerTurn)){
+//			boolean lastPlayer = !isPlayerTurn;
+//			winningSymbol = lastPlayer ? playerSymbol : CPUSymbol;
+//			int score = (winningSymbol == playerSymbol ? -1 : 1);
+//			best.score = score;
+//			return best;
+//		} else if (isFull()){
+//			best.score = 0;
+//			return best;
+//		}
+//				
+//		if(isPlayerTurn){
+//			best.score = 2;
+//		} else {
+//			best.score = -2;
+//		}
+//		
+//		int index = 0;
+//		int size = possibleMoves.size();
+//		
+//		while(index < size){
+//			Move m = possibleMoves.get(0);
+//			testMove(m, isPlayerTurn);
+//			index++;
+//			removeMove(m);
+//			reply = chooseMove(!isPlayerTurn, m);
+//			undoMove(m);
+//
+//			if((isPlayerTurn && reply.score < best.score) || (!isPlayerTurn && best.score < reply.score)){
+//				best.x = m.x;
+//				best.y = m.y;
+//				best.score = reply.score;
+//			} 
+//		}
+//		return best;
+//	}
+	
+	private BestMove chooseMove(boolean isPlayerTurn, Move lastMove, int alpha, int beta){
 		BestMove best = new BestMove(1,1);
 		BestMove reply; 
 		String winningSymbol;
@@ -116,11 +158,11 @@ public class GameBoard {
 		}
 				
 		if(isPlayerTurn){
-			best.score = 2;
+			best.score = beta;
 		} else {
-			best.score = -2;
+			best.score = alpha;
 		}
-		
+		System.out.println("This is a " + (isPlayerTurn ? "Player " : "Computer") + " turn");
 		int index = 0;
 		int size = possibleMoves.size();
 		
@@ -129,14 +171,32 @@ public class GameBoard {
 			testMove(m, isPlayerTurn);
 			index++;
 			removeMove(m);
-			reply = chooseMove(!isPlayerTurn, m);
+			reply = chooseMove(!isPlayerTurn, m, alpha, beta);
 			undoMove(m);
-
-			if((isPlayerTurn && reply.score < best.score) || (!isPlayerTurn && best.score < reply.score)){
+			
+			if(isPlayerTurn && reply.score < best.score){
+				System.out.println("\n-----Minimum Move------");
 				best.x = m.x;
 				best.y = m.y;
+				best.score = reply.score; 
+				beta = reply.score;
+				System.out.println("The current beta is: " + beta + " and new best move is: " + best);
+			} else if(!isPlayerTurn && reply.score > best.score){
+				System.out.println("\n-----Maximum Node-----");
+				System.out.println("The reply was: " + reply + " and the current best score is: " + best);
+				best.x = m.x;
+				best.y = m.y;
+				System.out.println("The previous alpha value was: " + alpha);
 				best.score = reply.score;
+				alpha = reply.score;
+				System.out.println("The current alpha is: " + alpha + " and new best move is: " + best);
 			} 
+			
+			if(alpha >= beta){
+				System.out.println("The alpha is greater than beta: " + alpha + " to " + beta);
+				System.out.println("I'm returning: " + best);
+				return best;
+			}
 		}
 		return best;
 	}
