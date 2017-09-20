@@ -47,8 +47,7 @@ public class Game {
 	 * @param beta			Stores the worst possible score the player knows it can achieve (upper bound)
 	 * @return				Optimal move found after looking at every possible move
 	 */
-	private Move minimax(boolean isPlayerTurn, Move moveMade, int d, int alpha, int beta){
-		int depth = d; 
+	private Move minimax(boolean isPlayerTurn, Move moveMade, int alpha, int beta){
 		Move bestMove = new Move(-1, -1);
 		String player = isPlayerTurn ? PLAYER_SYMBOL : CPU_SYMBOL;
 		ArrayList<Move> possibleMoves = getPossibleMoves();		
@@ -58,15 +57,10 @@ public class Game {
 		if (winnerFound(moveMade)){
 			String winner = moveMade.getPlayer();
 			int score = winner.equals(PLAYER_SYMBOL) ? -1 : 1;
-//			if(score == 1)
-//				System.out.println("Returning win move at depth: " + depth);
 			moveMade.setScore(score);
-			moveMade.setDepth(depth);
 			return moveMade;
 		} else if (boardIsFull){
 			moveMade.setScore(0);
-			moveMade.setDepth(depth);
-			//System.out.println("Returning full board at depth: " + depth);
 			return moveMade;
 		}
 					
@@ -77,18 +71,13 @@ public class Game {
 			for(Move m : possibleMoves){
 				testMove(m, player);
 				m.setPlayer(player);
-				Move move = minimax(true, m, depth+1, alpha, beta);
-				int moveScore = move.getScore();
-				int moveDepth = move.getDepth();
+				int moveScore = minimax(true, m, alpha, beta).getScore();
 				undoTestMove(m);
 				
 				// Test if move tested yielded a better score than our current best move
-				if(moveScore > bestMove.getScore() || (moveScore == bestMove.getScore() && moveDepth < bestMove.getDepth())){
-					if(depth == 1)
-						System.out.println(moveScore + " is replacing " + bestMove.getScore() + " with depth " + moveDepth);
+				if(moveScore > bestMove.getScore()){
 					bestMove.x = m.x;
 					bestMove.y = m.y;
-					bestMove.setDepth(moveDepth);
 					bestMove.setScore(moveScore);
 				}
 				
@@ -102,11 +91,6 @@ public class Game {
 				if(beta <= alpha){
 					break;
 				}
-				
-				if(depth == 1){
-					System.out.println("The current move " + m + " yielded a score of " + moveScore + " at depth " + moveDepth);
-					System.out.println("Our best move " + bestMove + " yielded a score of " + bestMove.getScore() + " at depth " + bestMove.getDepth());
-				}
 			}
 		} else {
 			bestMove.setScore(2);
@@ -115,9 +99,8 @@ public class Game {
 			for(Move m : possibleMoves){
 				testMove(m, player);
 				m.setPlayer(player);
-				Move move = minimax(false, m, depth+1, alpha, beta);
+				Move move = minimax(false, m, alpha, beta);
 				int moveScore = move.getScore();
-				int moveDepth = move.getDepth();
 				
 				undoTestMove(m);
 				
@@ -125,7 +108,6 @@ public class Game {
 				if(moveScore < bestMove.getScore()){
 					bestMove.x = m.x;
 					bestMove.y = m.y;
-					bestMove.setDepth(moveDepth);
 					bestMove.setScore(moveScore);
 				}
 				
@@ -171,7 +153,7 @@ public class Game {
 					scanner.close();
 					return;
 				} else {
-					Move CPUMove = minimax(false, move, 1, -2, 2);
+					Move CPUMove = minimax(false, move, -2, 2);
 					makeMove(CPUMove, false);	
 				}	
 				

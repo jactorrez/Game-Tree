@@ -4,8 +4,7 @@ public class Move {
 	public int y;
 	private String player;
 	private int score;
-	private int depth;
-	
+
 	public Move(int x, int y){
 		this.x = x;
 		this.y = y;
@@ -41,14 +40,6 @@ public class Move {
 	public int getScore(){
 		return score;
 	}
-	
-	public void setDepth(int depth){
-		this.depth = depth;
-	}
-	
-	public int getDepth(){
-		return depth;
-	} 
 	
 	public void setPlayer(String symbol){
 		this.player = symbol;
